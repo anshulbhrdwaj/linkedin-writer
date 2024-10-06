@@ -147,7 +147,11 @@ const useModalLogic = (closeModal: () => void) => {
 			// Removes the placeholder and inserts the AI response.
 			inputPlaceholder?.classList.remove("msg-form__placeholder");
 			linkedinInput.innerHTML = `<p>${aiResponse.message}</p>`;
-			linkedinInput.focus(); // Focuses the input for further user interaction.
+			// Create and dispatch input event to trigger LinkedIn's internal listeners
+			const inputEvent = new Event("input", { bubbles: true });
+			linkedinInput.dispatchEvent(inputEvent);
+
+			linkedinInput.focus(); // Ensure the input field is focused
 		} catch (error) {
 			console.error("Error inserting AI response:", error);
 			setError(Errors.insertion_failed);
