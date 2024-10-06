@@ -27,6 +27,7 @@ const Modal: React.FC<IModalProps> = ({ closeModal }) => {
 		userInput,
 		chats,
 		textareaRef,
+		error,
 		handleClickOutsideModal,
 		handleUserInput,
 		handleSubmitPrompt,
@@ -61,6 +62,9 @@ const Modal: React.FC<IModalProps> = ({ closeModal }) => {
 						className="w-full px-5 py-6 rounded-lg focus:outline-none resize-none leading-6 bg-white shadow-inner border border-[#e2e5ee] text-[#4A5568]"
 						rows={1}
 					/>
+
+					{/* Error message */}
+					{error && <div className="text-red-500 text-md mt-2">{error}</div>}
 
 					{/* Action buttons */}
 					{aiResponse && !userInput ? (

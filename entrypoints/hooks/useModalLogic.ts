@@ -3,6 +3,7 @@ import { storage } from "wxt/storage";
 import { IChat } from "../components/Messages";
 import useGetMessages from "./useGetMessages";
 import { usePostMessage } from "./usePostMessage";
+import Errors from "../constants/Errors";
 
 // Custom hook to manage modal logic
 // Provides functions and state for controlling the modal's lifecycle, handling user input,
@@ -18,6 +19,7 @@ const useModalLogic = (closeModal: () => void) => {
 	const [userInput, setUserInput] = useState("");
 	const [chats, setChats] = useState<IChat[]>([]);
 	const [aiIndex, setAiIndex] = useState<number | null>(null);
+	const [error, setError] = useState("");
 
 	// Reference to the textarea element.
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -79,7 +81,12 @@ const useModalLogic = (closeModal: () => void) => {
 
 	// Handles submitting the user's input as a prompt.
 	const submitPrompt = () => {
-		if (!userInput.trim()) return; // Prevents submission of empty inputs.
+		if (!userInput.trim()) {
+			setError(Errors.empty_input);
+			return;
+		} // Prevents submission of empty inputs.
+
+		error === Errors.empty_input && setError("");
 
 		const userMessage: IChat = {
 			id: chats.length + 1,
@@ -94,9 +101,16 @@ const useModalLogic = (closeModal: () => void) => {
 				"Thank you for the opportunity! If you have any more questions, feel free to ask.",
 		};
 
-		// Updates chat history with user input and AI response.
-		// postMessage.mutate(userInput);
-		setChats([...chats, userMessage, aiResponse]);
+		try {
+			// Updates chat history with user input and AI response.
+			// postMessage.mutate(userInput);
+			setChats([...chats, userMessage, aiResponse]);
+			error === Errors.submition_failed && setError("");
+		} catch (error) {
+			console.error("Error submitting prompt:", error); // when connected to backend, error should be sent to create log report instead
+			setError(Errors.submition_failed);
+		}
+		error === Errors.submition_failed && setError("");
 		setUserInput(""); // Clears the input field.
 	};
 
@@ -129,11 +143,16 @@ const useModalLogic = (closeModal: () => void) => {
 			return;
 		}
 
-		// Removes the placeholder and inserts the AI response.
-		inputPlaceholder?.classList.remove("msg-form__placeholder");
-		linkedinInput.innerHTML = `<p>${aiResponse.message}</p>`;
-		linkedinInput.focus(); // Focuses the input for further user interaction.
-
+		try {
+			// Removes the placeholder and inserts the AI response.
+			inputPlaceholder?.classList.remove("msg-form__placeholder");
+			linkedinInput.innerHTML = `<p>${aiResponse.message}</p>`;
+			linkedinInput.focus(); // Focuses the input for further user interaction.
+		} catch (error) {
+			console.error("Error inserting AI response:", error);
+			setError(Errors.insertion_failed);
+		}
+		error === Errors.insertion_failed && setError("");
 		handleModalClose(); // Closes the modal after insertion.
 		setUserInput(""); // Clears the input field.
 	};
@@ -145,6 +164,7 @@ const useModalLogic = (closeModal: () => void) => {
 		userInput,
 		chats,
 		textareaRef,
+		error,
 		handleModalClose,
 		handleClickOutsideModal,
 		handleUserInput,
